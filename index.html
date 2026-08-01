@@ -1,134 +1,29 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Speed Test Polska - Tryb Niezależny</title>
-    <style>
-        body { font-family: 'Open Sans', 'Helvetica', sans-serif; text-align: center; background: #000000; color: #ffffff; padding: 20px 10px; margin: 0; }
-        .card { background: #16161a; max-width: 500px; margin: 0 auto; padding: 25px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.6); }
-        h2 { color: #f0f0f0; margin-top: 0; font-weight: 300; letter-spacing: 1px; }
+const express = require('express');
+const app = express();
+const path = require('path');
 
-        button { background: linear-gradient(135deg, #00d2ff 0%, #ff00ff 100%); color: #000; border: none; padding: 16px 32px; font-size: 18px; font-weight: bold; border-radius: 30px; cursor: pointer; margin: 25px 0; text-transform: uppercase; box-shadow: 0 5px 15px rgba(0, 210, 255, 0.4); transition: transform 0.1s, box-shadow 0.2s; }
-        button:hover { box-shadow: 0 8px 20px rgba(0, 210, 255, 0.6); }
-        button:active { transform: scale(0.97); }
-        button:disabled { background: #444; color: #aaa; box-shadow: none; cursor: not-allowed; }
+// Serwujemy statyczne pliki (index.html) z głównego folderu
+app.use(express.static(path.join(__dirname)));
 
-        .gauge-area { display: flex; justify-content: space-around; margin-top: 20px; }
-        .gauge { flex: 1; text-align: center; position: relative; }
-        .gauge-value { font-size: 42px; font-weight: bold; color: #ffffff; line-height: 1; }
-        .gauge-unit { font-size: 14px; color: #aaa; margin-top: 4px; }
-        .gauge-label { font-size: 16px; color: #aaa; text-transform: uppercase; margin-top: 10px; font-weight: 300; }
+// Endpoint getIP
+app.get('/getIP.php', (req, res) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  res.send(ip.replace('::ffff:', ''));
+});
 
-        .meta-data { display: flex; justify-content: space-between; max-width: 380px; margin: 25px auto 0 auto; color: #aaa; font-size: 16px; }
-        .meta-val { font-weight: bold; color: #ffffff; font-size: 18px; }
-        .meta-unit { font-size: 14px; }
+// Endpoint empty (do wysyłania/pingu)
+app.get('/empty.php', (req, res) => {
+  res.status(200).send('');
+});
 
-        #ip, #serwer, #isp { font-size: 14px; color: #888; margin-top: 10px; font-weight: 300; }
-        #serwer { color: #00d2ff; }
+// Endpoint garbage (do pobierania)
+app.get('/garbage.php', (req, res) => {
+  // Generujemy 1MB "śmieci" do testu pobierania
+  const garbage = Buffer.alloc(1 * 1024 * 1024, '0');
+  res.set('Content-Type', 'application/octet-stream');
+  res.send(garbage);
+});
 
-        .progress-bar { position: relative; height: 120px; width: 100%; border-radius: 120px 120px 0 0; overflow: hidden; }
-        .download-gauge .progress-bar { border: 2px solid rgba(255, 0, 255, 0.2); border-bottom: none; }
-        .upload-gauge .progress-bar { border: 2px solid rgba(0, 210, 255, 0.2); border-bottom: none; }
-
-        .progress { position: absolute; bottom: 0; left: 0; width: 100%; transition: height 0.5s ease-out; }
-        .download-gauge .progress { background: linear-gradient(to top, rgba(255, 0, 255, 0.6) 0%, rgba(255, 0, 255, 0) 100%); }
-        .upload-gauge .progress { background: linear-gradient(to top, rgba(0, 210, 255, 0.6) 0%, rgba(0, 210, 255, 0) 100%); }
-    </style>
-</head>
-<body>
-
-<div class="card">
-    <h2>SPEED TEST POLSKA</h2>
-    
-    <div id="serwer">Serwer: <b>Twój GitHub Pages (Tryb Niezależny)</b></div>
-    <div id="ip">Adres IP: <b id="ip_val">--</b></div>
-    
-    <button id="startBtn" onclick="startTest()">Rozpocznij Test</button>
-
-    <div class="gauge-area">
-        <div class="gauge download-gauge">
-            <div class="progress-bar"><div class="progress" id="dlProgress"></div></div>
-            <div class="gauge-value" id="dlVal">0.00</div>
-            <div class="gauge-unit">Mbps</div>
-            <div class="gauge-label">Download</div>
-        </div>
-        <div class="gauge upload-gauge">
-            <div class="progress-bar"><div class="progress" id="ulProgress"></div></div>
-            <div class="gauge-value" id="ulVal">0.00</div>
-            <div class="gauge-unit">Mbps</div>
-            <div class="gauge-label">Upload</div>
-        </div>
-    </div>
-
-    <div class="meta-data">
-        <div>Ping: <b class="meta-val" id="pingVal">--</b> <span class="meta-unit">ms</span></div>
-        <div>Jitter: <b class="meta-val" id="jitterVal">--</b> <span class="meta-unit">ms</span></div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/librespeed-tester@2.0.2/dist/librespeed.min.js"></script>
-<script>
-    const startBtn = document.getElementById('startBtn');
-    const serwerDiv = document.getElementById('serwer');
-
-    // 1. Inicjalizacja testera
-    const s = new LibreSpeed();
-
-    // === 2. KONFIGURACJA TRYBU NIEZALEŻNEGO (FRONTEND ONLY) ===
-    // Korzystamy bezpośrednio z plików na Twoim GitHub Pages.
-    s.setParameter({
-        serverList: [
-            {
-                name: "Twój GitHub Pages",
-                server: "https://gregoslaw.github.io/Speed-test/", // Ścieżka do Twojego repo
-                dlURL: "garbage.php", // Plik testowy pobierania (utwórz pusty)
-                ulURL: "empty.php",   // Plik testowy wysyłania (utwórz pusty)
-                pingURL: "empty.php", // Plik testowy pingu
-                getIpURL: "https://api.ipify.org" // Używamy zewnętrznego API do pobrania IP
-            }
-        ]
-    });
-    // =========================================================
-
-    // Pobieramy IP używając zewnętrznego API, bo GitHub nie daje getIP.php
-    fetch('https://api.ipify.org?format=json')
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('ip_val').innerText = data.ip;
-        })
-        .catch(err => {
-            document.getElementById('ip_val').innerText = "Błąd pobierania IP";
-        });
-
-    const threads = Math.min(navigator.hardwareConcurrency || 4, 16);
-    s.settings.download_threads = threads;
-    s.settings.upload_threads = threads;
-
-    s.onUpdate = function(data) {
-        document.getElementById('pingVal').innerText = data.ping;
-        document.getElementById('jitterVal').innerText = data.jitter;
-        
-        const dlVal = parseFloat(data.dlStatus || 0).toFixed(2);
-        document.getElementById('dlVal').innerText = dlVal;
-        document.getElementById('dlProgress').style.height = (Math.min(data.dlStatus / 10, 100)) + '%';
-
-        const ulVal = parseFloat(data.ulStatus || 0).toFixed(2);
-        document.getElementById('ulVal').innerText = ulVal;
-        document.getElementById('ulProgress').style.height = (Math.min(data.ulStatus / 10, 100)) + '%';
-    };
-
-    s.onEnd = function() {
-        startBtn.disabled = false;
-        startBtn.innerText = 'Uruchom ponownie';
-    };
-
-    function startTest() {
-        startBtn.disabled = true;
-        startBtn.innerText = 'Testuję...';
-        s.start();
-    }
-</script>
-
-</body>
-</html>
+const listener = app.listen(process.env.PORT || 3000, () => {
+  console.log('Test prędkości działa na porcie ' + listener.address().port);
+});
