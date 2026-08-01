@@ -1,29 +1,67 @@
-const express = require('express');
-const app = express();
-const path = require('path');
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speed Test Polska - Gregosław</title>
+    <style>
+        /* Stylizacja tła i karty, zgodna z Twoim pierwotnym projektem */
+        body {
+            font-family: 'Open Sans', 'Helvetica', sans-serif;
+            text-align: center;
+            background: #000000; /* Czarne tło */
+            color: #ffffff;
+            padding: 20px 10px;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* Pełna wysokość ekranu */
+        }
+        .card {
+            background: #16161a; /* Ciemnoszara karta */
+            width: 100%;
+            max-width: 800px; /* Szersza karta dla lepszego widoku OpenSpeedTest */
+            height: 600px; /* Stała wysokość karty */
+            padding: 10px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+            overflow: hidden; /* Ukrywa wystające elementy iframe */
+            position: relative;
+        }
+        h2 {
+            color: #f0f0f0;
+            margin-top: 10px;
+            font-weight: 300;
+            letter-spacing: 1px;
+            font-size: 20px;
+        }
+        
+        /* Stylizacja iframe OpenSpeedTest */
+        iframe {
+            width: 100%;
+            height: calc(100% - 40px); /* Wysokość karty minus nagłówek */
+            border: none;
+            border-radius: 0 0 16px 16px; /* Zaokrąglenie tylko na dole */
+            position: absolute;
+            bottom: 0;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
 
-// Serwujemy statyczne pliki (index.html) z głównego folderu
-app.use(express.static(path.join(__dirname)));
+<div class="card">
+    <h2>SPEED TEST STALOWA WOLA (by OpenSpeedTest)</h2>
+    
+    <!-- 
+      INTEGRACJA OPENSPEEDTEST
+      To jest oficjalny widget OpenSpeedTest hostowany na ich serwerach,
+      ale osadzony bezpośrednio na Twojej stronie. Gwarantuje niezawodność
+      i prawdziwe wyniki, omijając rygorystyczne blokady GitHub Pages.
+    -->
+    <iframe src="https://openspeedtest.com/speedtest" allow="geolocation; microphone; camera; midi; encrypted-media;"></iframe>
+</div>
 
-// Endpoint getIP
-app.get('/getIP.php', (req, res) => {
-  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-  res.send(ip.replace('::ffff:', ''));
-});
-
-// Endpoint empty (do wysyłania/pingu)
-app.get('/empty.php', (req, res) => {
-  res.status(200).send('');
-});
-
-// Endpoint garbage (do pobierania)
-app.get('/garbage.php', (req, res) => {
-  // Generujemy 1MB "śmieci" do testu pobierania
-  const garbage = Buffer.alloc(1 * 1024 * 1024, '0');
-  res.set('Content-Type', 'application/octet-stream');
-  res.send(garbage);
-});
-
-const listener = app.listen(process.env.PORT || 3000, () => {
-  console.log('Test prędkości działa na porcie ' + listener.address().port);
-});
+</body>
+</html>
