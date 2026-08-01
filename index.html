@@ -1,80 +1,131 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>Test Prędkości Łącza Internetowego</title>
-  <meta property="og:title" content="Test Prędkości Łącza Internetowego" />
-  <meta property="og:description" content="Kliknij, aby w kilka sekund sprawdzić ping oraz prędkość pobierania Twojego internetu." />
-  <meta property="og:type" content="website" />
-
-  <style>
-    body { font-family: system-ui, -apple-system, sans-serif; text-align: center; padding: 2rem 1rem; background: #f4f4f9; color: #333; margin: 0; }
-    .card { background: white; padding: 2rem 1.5rem; border-radius: 16px; max-width: 400px; margin: 2rem auto; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-    h2 { margin-top: 0; color: #111; font-size: 1.4rem; }
-    p { color: #666; font-size: 0.95rem; line-height: 1.4; }
-    .status { font-size: 1.1rem; font-weight: bold; margin-top: 1.5rem; color: #007bff; min-height: 2.5rem; display: flex; align-items: center; justify-content: center; }
-    .btn { display: none; margin-top: 1.5rem; padding: 14px 28px; background: #25D366; color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 1rem; text-decoration: none; box-shadow: 0 4px 10px rgba(37,211,102,0.3); }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speed Test</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 30px 15px; background: #0b0b0e; color: #fff; }
+        .card { background: #16161a; max-width: 450px; margin: 0 auto; padding: 25px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.6); }
+        button { background: #007bff; color: white; border: none; padding: 14px 28px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 15px; width: 100%; transition: 0.2s; }
+        button:disabled { background: #444; cursor: not-allowed; }
+        .wa-btn { background: #25D366; text-decoration: none; color: white; padding: 14px 28px; font-size: 16px; font-weight: bold; border-radius: 8px; margin-top: 15px; display: block; text-align: center; }
+        #canvas-container { margin-top: 20px; display: none; }
+        canvas { max-width: 100%; height: auto; border-radius: 10px; border: 1px solid #333; }
+        #status { margin-bottom: 10px; color: #aaa; font-size: 14px; }
+    </style>
 </head>
 <body>
-  <div class="card">
-    <h2>Test Parametrów Łącza</h2>
-    <p>Proszę czekać, trwa badanie jakości połączenia internetowego...</p>
-    <div id="status" class="status">Inicjalizacja testu...</div>
-    <a id="sendBtn" class="btn" href="#">Przekaż wynik na WhatsApp</a>
-  </div>
 
-  <script>
-    const mojNumer = "48509265035";
+<div class="card">
+    <h2 style="margin-top:0;">TEST PRĘDKOŚCI</h2>
+    <div id="status">Naciśnij przycisk, aby rozpocząć pomiar</div>
+    
+    <button id="startBtn" onclick="runTest()">ROZPOCZNIJ TEST</button>
 
-    async function measurePing() {
-      const pings = [];
-      for (let i = 0; i < 5; i++) {
-        const start = performance.now();
-        try {
-          await fetch('https://www.cloudflare.com/cdn-cgi/trace?cache=' + Math.random(), { method: 'HEAD', mode: 'no-cors' });
-          pings.push(performance.now() - start);
-        } catch (e) {}
-      }
-      return pings.length > 0 ? Math.round(pings.reduce((a, b) => a + b, 0) / pings.length) : "Błąd";
+    <div id="canvas-container">
+        <!-- Tutaj generuje się wynikowa grafika -->
+        <canvas id="resultCanvas" width="500" height="260"></canvas>
+        
+        <a id="waBtn" class="wa-btn" target="_blank">Wyślij wynik przez WhatsApp</a>
+    </div>
+</div>
+
+<script>
+const PHONE_NUMBER = "TWÓJ_NUMER_TELEFONU"; // Wpisz swój numer z kierunkowym, np. 48123456789
+
+async function runTest() {
+    const status = document.getElementById('status');
+    const startBtn = document.getElementById('startBtn');
+    const container = document.getElementById('canvas-container');
+
+    startBtn.disabled = true;
+    container.style.display = 'none';
+    status.innerText = "Mierzenie prędkości pobierania...";
+
+    const fileUrl = 'https://gregoslaw.github.io/Speed-test/20MB.bin?cache=' + Math.random();
+    const fileSizeMB = 20;
+
+    const startTime = performance.now();
+
+    try {
+        const response = await fetch(fileUrl);
+        await response.blob();
+        const endTime = performance.now();
+
+        const durationInSeconds = (endTime - startTime) / 1000;
+        const downloadMbps = ((fileSizeMB * 8) / durationInSeconds).toFixed(2);
+
+        status.innerText = "Test zakończony sukcesem!";
+        
+        // Rysowanie grafiki na wzór Speedtest
+        drawCard(downloadMbps, durationInSeconds.toFixed(1));
+
+        // Przygotowanie linku WhatsApp
+        const text = encodeURIComponent(`📊 Wynik Speedtest:\n⬇ Pobieranie: ${downloadMbps} Mbps\n⏱ Czas: ${durationInSeconds.toFixed(1)}s`);
+        document.getElementById('waBtn').href = `https://wa.me/${PHONE_NUMBER}?text=${text}`;
+
+        container.style.display = 'block';
+
+    } catch (err) {
+        status.innerText = "Błąd podczas wykonywania testu!";
+    } finally {
+        startBtn.disabled = false;
     }
+}
 
-    async function measureSpeed() {
-      const testFile = 'https://speed.cloudflare.com/__down?bytes=25000000';
-      const start = performance.now();
-      try {
-        const response = await fetch(testFile + '&r=' + Math.random());
-        const blob = await response.blob();
-        const durationSec = (performance.now() - start) / 1000;
-        return (((blob.size * 8) / durationSec) / 1000000).toFixed(2);
-      } catch (e) {
-        return "Błąd pomiaru";
-      }
-    }
+function drawCard(download, time) {
+    const canvas = document.getElementById('resultCanvas');
+    const ctx = canvas.getContext('2d');
 
-    async function runTest() {
-      const statusEl = document.getElementById('status');
-      statusEl.innerText = "Mierzenie opóźnienia (Ping)...";
-      const ping = await measurePing();
+    // Tło
+    ctx.fillStyle = '#0f0f12';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      statusEl.innerText = "Mierzenie prędkości pobierania...";
-      const speed = await measureSpeed();
+    // Nagłówek
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 20px Arial';
+    ctx.fillText('SPEEDTEST', 25, 40);
 
-      statusEl.innerText = `Wynik: ${ping} ms | ${speed} Mbps`;
+    ctx.fillStyle = '#888888';
+    ctx.font = '12px Arial';
+    const now = new Date();
+    ctx.fillText(now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), 360, 40);
 
-      const text = encodeURIComponent(`Cześć! Oto wynik mojego testu łącza:\n• Ping: ${ping} ms\n• Pobieranie: ${speed} Mbps`);
-      const waUrl = `https://wa.me/${mojNumer}?text=${text}`;
+    // Linia podziału
+    ctx.strokeStyle = '#22222a';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(25, 55);
+    ctx.lineTo(475, 55);
+    ctx.stroke();
 
-      const btn = document.getElementById('sendBtn');
-      btn.href = waUrl;
-      btn.style.display = "inline-block";
+    // Sekcja POBIERANIE
+    ctx.fillStyle = '#00f2fe';
+    ctx.font = 'bold 14px Arial';
+    ctx.fillText('⬇ POBIERANIE Mbps', 25, 95);
 
-      setTimeout(() => { window.location.href = waUrl; }, 1000);
-    }
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 48px Arial';
+    ctx.fillText(download, 25, 155);
 
-    window.onload = runTest;
-  </script>
+    // Sekcja CZAS / DETAILS
+    ctx.fillStyle = '#aaa';
+    ctx.font = '14px Arial';
+    ctx.fillText('Czas testu:', 280, 95);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 24px Arial';
+    ctx.fillText(time + ' s', 280, 130);
+
+    // Stopka
+    ctx.fillStyle = '#444';
+    ctx.fillRect(0, 195, canvas.width, 65);
+    
+    ctx.fillStyle = '#aaa';
+    ctx.font = '13px Arial';
+    ctx.fillText('Serwer: GitHub Pages (gregoslaw)', 25, 232);
+}
+</script>
+
 </body>
 </html>
