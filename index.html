@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Test Prędkości Łącza Internetowego</title>
+  <meta property="og:title" content="Test Prędkości Łącza Internetowego" />
+  <meta property="og:description" content="Kliknij, aby w kilka sekund sprawdzić ping oraz prędkość pobierania Twojego internetu." />
+  <meta property="og:type" content="website" />
+
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; text-align: center; padding: 2rem 1rem; background: #f4f4f9; color: #333; margin: 0; }
+    .card { background: white; padding: 2rem 1.5rem; border-radius: 16px; max-width: 400px; margin: 2rem auto; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    h2 { margin-top: 0; color: #111; font-size: 1.4rem; }
+    p { color: #666; font-size: 0.95rem; line-height: 1.4; }
+    .status { font-size: 1.1rem; font-weight: bold; margin-top: 1.5rem; color: #007bff; min-height: 2.5rem; display: flex; align-items: center; justify-content: center; }
+    .btn { display: none; margin-top: 1.5rem; padding: 14px 28px; background: #25D366; color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 1rem; text-decoration: none; box-shadow: 0 4px 10px rgba(37,211,102,0.3); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Test Parametrów Łącza</h2>
+    <p>Proszę czekać, trwa badanie jakości połączenia internetowego...</p>
+    <div id="status" class="status">Inicjalizacja testu...</div>
+    <a id="sendBtn" class="btn" href="#">Przekaż wynik na WhatsApp</a>
+  </div>
+
+  <script>
+    const mojNumer = "48509265035";
+
+    async function measurePing() {
+      const pings = [];
+      for (let i = 0; i < 5; i++) {
+        const start = performance.now();
+        try {
+          await fetch('https://www.cloudflare.com/cdn-cgi/trace?cache=' + Math.random(), { method: 'HEAD', mode: 'no-cors' });
+          pings.push(performance.now() - start);
+        } catch (e) {}
+      }
+      return pings.length > 0 ? Math.round(pings.reduce((a, b) => a + b, 0) / pings.length) : "Błąd";
+    }
+
+    async function measureSpeed() {
+      const testFile = 'https://speed.cloudflare.com/__down?bytes=25000000';
+      const start = performance.now();
+      try {
+        const response = await fetch(testFile + '&r=' + Math.random());
+        const blob = await response.blob();
+        const durationSec = (performance.now() - start) / 1000;
+        return (((blob.size * 8) / durationSec) / 1000000).toFixed(2);
+      } catch (e) {
+        return "Błąd pomiaru";
+      }
+    }
+
+    async function runTest() {
+      const statusEl = document.getElementById('status');
+      statusEl.innerText = "Mierzenie opóźnienia (Ping)...";
+      const ping = await measurePing();
+
+      statusEl.innerText = "Mierzenie prędkości pobierania...";
+      const speed = await measureSpeed();
+
+      statusEl.innerText = `Wynik: ${ping} ms | ${speed} Mbps`;
+
+      const text = encodeURIComponent(`Cześć! Oto wynik mojego testu łącza:\n• Ping: ${ping} ms\n• Pobieranie: ${speed} Mbps`);
+      const waUrl = `https://wa.me/${mojNumer}?text=${text}`;
+
+      const btn = document.getElementById('sendBtn');
+      btn.href = waUrl;
+      btn.style.display = "inline-block";
+
+      setTimeout(() => { window.location.href = waUrl; }, 1000);
+    }
+
+    window.onload = runTest;
+  </script>
+</body>
+</html>
