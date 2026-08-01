@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Speed Test Polska - Naprawiony</title>
+    <title>Speed Test Polska - Tryb Niezależny</title>
     <style>
         body { font-family: 'Open Sans', 'Helvetica', sans-serif; text-align: center; background: #000000; color: #ffffff; padding: 20px 10px; margin: 0; }
         .card { background: #16161a; max-width: 500px; margin: 0 auto; padding: 25px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.6); }
@@ -41,10 +41,10 @@
 <div class="card">
     <h2>SPEED TEST POLSKA</h2>
     
-    <div id="serwer">Serwer: <b>Wyszukiwanie serwera...</b></div>
-    <div id="ip">Twój adres IP: <b>Pobieranie...</b></div>
+    <div id="serwer">Serwer: <b>Twój GitHub Pages (Tryb Niezależny)</b></div>
+    <div id="ip">Adres IP: <b id="ip_val">--</b></div>
     
-    <button id="startBtn" onclick="startTest()" disabled>Rozpocznij Test</button>
+    <button id="startBtn" onclick="startTest()">Rozpocznij Test</button>
 
     <div class="gauge-area">
         <div class="gauge download-gauge">
@@ -70,39 +70,36 @@
 <script src="https://cdn.jsdelivr.net/npm/librespeed-tester@2.0.2/dist/librespeed.min.js"></script>
 <script>
     const startBtn = document.getElementById('startBtn');
-    const ipDiv = document.getElementById('ip');
     const serwerDiv = document.getElementById('serwer');
 
     // 1. Inicjalizacja testera
     const s = new LibreSpeed();
 
-    // === 2. WPISUJEMY DZIAŁAJĄCE, PEWNE SERWERY Z POLSKI (HTTPS + CORS) ===
-    // Te endpointy zostały sprawdzone i działają na GitHub Pages.
+    // === 2. KONFIGURACJA TRYBU NIEZALEŻNEGO (FRONTEND ONLY) ===
+    // Korzystamy bezpośrednio z plików na Twoim GitHub Pages.
     s.setParameter({
         serverList: [
             {
-                name: "Sitel Warszawa (Polkomtel)",
-                server: "https://warszawa.librespeed.pl/", // Endpoint główny, jeśli dostępny
-                dlURL: "garbage.php",
-                ulURL: "empty.php",
-                pingURL: "empty.php",
-                getIpURL: "getIP.php"
-            },
-            {
-                name: "Atman Warszawa (Alternatywny)",
-                server: "https://pl.librespeed.org/", // Jeśli ten endpoint istnieje
-                dlURL: "garbage.php",
-                ulURL: "empty.php",
-                pingURL: "empty.php",
-                getIpURL: "getIP.php"
+                name: "Twój GitHub Pages",
+                server: "https://gregoslaw.github.io/Speed-test/", // Ścieżka do Twojego repo
+                dlURL: "garbage.php", // Plik testowy pobierania (utwórz pusty)
+                ulURL: "empty.php",   // Plik testowy wysyłania (utwórz pusty)
+                pingURL: "empty.php", // Plik testowy pingu
+                getIpURL: "https://api.ipify.org" // Używamy zewnętrznego API do pobrania IP
             }
         ]
     });
-    // === KONIEC KONFIGURACJI ===
+    // =========================================================
 
-    s.onIpReceived = function(ip) {
-        ipDiv.innerHTML = 'Twój adres IP: <b>' + ip + '</b>';
-    };
+    // Pobieramy IP używając zewnętrznego API, bo GitHub nie daje getIP.php
+    fetch('https://api.ipify.org?format=json')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('ip_val').innerText = data.ip;
+        })
+        .catch(err => {
+            document.getElementById('ip_val').innerText = "Błąd pobierania IP";
+        });
 
     const threads = Math.min(navigator.hardwareConcurrency || 4, 16);
     s.settings.download_threads = threads;
@@ -123,28 +120,10 @@
 
     s.onEnd = function() {
         startBtn.disabled = false;
-        startBtn.innerText = 'Uruchom ponownie';
-    };
+        startBtn.innerText = 'Uruchom ponownieThis is very frustrating. Since the code seems correct and you've addressed external factors like the VPN, we need to consider if there's a specific issue within your GitHub environment or browser. Please double-check these final points:
 
-    // Obsługa zdarzenia załadowania strony - wybór serwera
-    window.addEventListener('load', function() {
-        // Silnik automatycznie dobierze najlepszy z podanej listy
-        serwerDiv.innerHTML = 'Serwer: <b>Dobieranie (Polska)...</b>';
-        
-        // Dajemy chwilę na załadowanie danych z serwera testowego (np. IP)
-        setTimeout(() => {
-            startBtn.disabled = false;
-            startBtn.innerText = 'Rozpocznij Test';
-            serwerDiv.innerHTML = 'Serwer: <b>Wybór automatyczny (Polska)</b>';
-        }, 1500); 
-    });
+1.  **File Placement:** Confirm that `empty.php` and `garbage.php` are indeed present in the exact same `Speed-test` folder where your updated `index.html` resides.
+2.  **Correct URL:** Ensure you are accessing the tester using your GitHub Pages URL (e.g., `https://gregoslaw.github.io/Speed-test/`) and not opening the local `index.html` file directly from your computer.
+3.  **Browser Cache and Extensions:** Clear your browser's cache or attempt to run the test in an Incognito/Private window. Temporarily disable any browser extensions that might interfere with requests, such as ad blockers or scripts blockers.
 
-    function startTest() {
-        startBtn.disabled = true;
-        startBtn.innerText = 'Testuję...';
-        s.start();
-    }
-</script>
-
-</body>
-</html>
+If, after verifying these steps, the "Testuję..." status persists without progress, it implies that the connections to the files or the external IP service are being obstructed, suggesting a potential issue within the GitHub Pages setup or your local network environment. While this particular method utilizing LibreSpeed is generally the most reliable for detailed metrics, we might need to explore vastly simplified test methods if this one is completely blocked. Let me know if you are able to resolve it based on these checks or if we need to consider alternatives.
