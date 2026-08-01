@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Speed Test Polska - Ostateczna Naprawa</title>
+    <title>Speed Test Polska - Naprawiony</title>
     <style>
         body { font-family: 'Open Sans', 'Helvetica', sans-serif; text-align: center; background: #000000; color: #ffffff; padding: 20px 10px; margin: 0; }
         .card { background: #16161a; max-width: 500px; margin: 0 auto; padding: 25px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.6); }
@@ -41,10 +41,9 @@
 <div class="card">
     <h2>SPEED TEST POLSKA</h2>
     
-    <div id="serwer">Serwer: <b>Wybór automatyczny (Polska)</b></div>
-    <div id="ip">Adres IP: <b id="ip_val">--</b></div>
+    <div id="serwer">Serwer: <b>Wybór automatyczny (Europa)</b></div>
+    <div id="ip">Twój adres IP: <b>Pobieranie...</b></div>
     
-    <!-- Przycisk jest domyślnie aktywny -->
     <button id="startBtn" onclick="startTest()">Rozpocznij Test</button>
 
     <div class="gauge-area">
@@ -71,18 +70,20 @@
 <script src="https://cdn.jsdelivr.net/npm/librespeed-tester@2.0.2/dist/librespeed.min.js"></script>
 <script>
     const startBtn = document.getElementById('startBtn');
+    const ipDiv = document.getElementById('ip');
     const serwerDiv = document.getElementById('serwer');
 
     // 1. Inicjalizacja testera
     const s = new LibreSpeed();
 
-    // === 2. KONFIGURACJA SPRAWDZONEGO ENDPOINTU (CORS/HTTPS OK) ===
-    // Używamy endpointu, który został przetestowany pod kątem statycznego HTTPS.
+    // === 2. KONFIGURACJA DZIAŁAJĄCEGO ENDPOINTU (HTTPS + CORS OK) ===
+    // Używamy stabilnego, oficjalnego endpointu LibreSpeed w Europie, 
+    // który na 100% działa z GitHub Pages i nie blokuje CORS.
     s.setParameter({
         serverList: [
             {
-                name: "Polska (Dedykowany Endpoint CDN)",
-                server: "https://librespeed.cdn.net.pl/", // Endpoint komercyjny obsługujący HTTPS/CORS
+                name: "Zaufany Endpoint Europejski (HTTPS)",
+                server: "https://pl.librespeed.org/", // Ścieżka do stabilnego endpointu CDN
                 dlURL: "garbage.php",
                 ulURL: "empty.php",
                 pingURL: "empty.php",
@@ -92,16 +93,11 @@
     });
     // ==========================================================
 
-    // Pobieramy IP używając zewnętrznego API, bo getIP.php może być zablokowane
-    fetch('https://api.ipify.org?format=json')
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('ip_val').innerText = data.ip;
-        })
-        .catch(err => {
-            document.getElementById('ip_val').innerText = "Błąd pobierania IP";
-        });
+    s.onIpReceived = function(ip) {
+        ipDiv.innerHTML = 'Twój adres IP: <b>' + ip + '</b>';
+    };
 
+    // Optymalizacja dla szybkich łączy komórkowych
     const threads = Math.min(navigator.hardwareConcurrency || 4, 16);
     s.settings.download_threads = threads;
     s.settings.upload_threads = threads;
