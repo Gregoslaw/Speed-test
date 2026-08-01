@@ -9,7 +9,7 @@
         .card { background: #16161a; max-width: 480px; margin: 0 auto; padding: 25px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.6); }
         button { background: #007bff; color: white; border: none; padding: 14px 28px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 15px; width: 100%; transition: 0.2s; }
         button:disabled { background: #444; cursor: not-allowed; }
-        .wa-btn { background: #25D366; text-decoration: none; color: white; padding: 14px 28px; font-size: 16px; font-weight: bold; border-radius: 8px; margin-top: 15px; display: block; text-align: center; }
+        .share-btn { background: #25D366; color: white; border: none; padding: 14px 28px; font-size: 16px; font-weight: bold; border-radius: 8px; margin-top: 15px; width: 100%; cursor: pointer; }
         #canvas-container { margin-top: 20px; display: none; }
         canvas { max-width: 100%; height: auto; border-radius: 10px; border: 1px solid #333; }
         #status { margin-bottom: 10px; color: #00f2fe; font-size: 15px; font-weight: 500; }
@@ -25,12 +25,12 @@
 
     <div id="canvas-container">
         <canvas id="resultCanvas" width="500" height="280"></canvas>
-        <a id="waBtn" class="wa-btn" target="_blank">Wyślij wynik przez WhatsApp</a>
+        <button id="shareBtn" class="share-btn" onclick="shareResult()">Udostępnij wynik (WhatsApp / Signal / Messenger)</button>
     </div>
 </div>
 
 <script>
-const TARGET_PHONE = "48509265035";
+let shareDataText = "";
 
 async function runFullTest() {
     const status = document.getElementById('status');
@@ -58,15 +58,8 @@ async function runFullTest() {
         // Generowanie karty wynikowej na canvas
         drawCard(ping, downloadMbps, uploadMbps);
 
-        // Przygotowanie linku bezpośredniego do WhatsAppa
-        const waText = encodeURIComponent(
-            `📊 *WYNIK TESTU PRĘDKOŚCI*\n` +
-            `⏱ *Ping:* ${ping} ms\n` +
-            `⬇ *Pobieranie:* ${downloadMbps} Mbps\n` +
-            `⬆ *Wysyłanie:* ${uploadMbps} Mbps\n` +
-            `📅 *Data:* ${new Date().toLocaleString('pl-PL')}`
-        );
-        document.getElementById('waBtn').href = `https://wa.me/${TARGET_PHONE}?text=${waText}`;
+        // Treść raportu do udostępnienia
+        shareDataText = `📊 *WYNIK TESTU PRĘDKOŚCI*\n⏱ *Ping:* ${ping} ms\n⬇ *Pobieranie:* ${downloadMbps} Mbps\n⬆ *Wysyłanie:* ${uploadMbps} Mbps\n📅 *Data:* ${new Date().toLocaleString('pl-PL')}`;
 
         container.style.display = 'block';
 
@@ -75,6 +68,24 @@ async function runFullTest() {
         status.innerText = "Błąd podczas wykonywania testu!";
     } finally {
         startBtn.disabled = false;
+    }
+}
+
+// Funkcja obsługująca natywne udostępnianie w telefonie
+async function shareResult() {
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'Wynik Speedtest',
+                text: shareDataText
+            });
+        } catch (err) {
+            console.log('Anulowano udostępnianie');
+        }
+    } else {
+        // Skopiowanie do schowka, jeśli przeglądarka nie wspiera Web Share API
+        navigator.clipboard.writeText(shareDataText);
+        alert("Wynik skopiowany do schowka! Możesz go wkleić w dowolnej aplikacji.");
     }
 }
 
@@ -107,7 +118,7 @@ async function measureDownload() {
     return ((totalDownloadedMB * 8) / totalTimeSec).toFixed(2);
 }
 
-// Funkcja mierzenia WYSYŁANIA (Upload 6 MB danych)
+// Funkcja mierzenia WYSYŁANIA (Upload 6 MB)
 async function measureUpload() {
     const uploadSizeMB = 6;
     const bytes = new Uint8Array(uploadSizeMB * 1024 * 1024);
@@ -120,13 +131,11 @@ async function measureUpload() {
             body: blob
         });
     } catch (e) {}
-    const endTime = performance.now();
-
-    const durationInSeconds = (endTime - startTime) / 1000;
+    const durationInSeconds = (performance.now() - startTime) / 1000;
     return ((uploadSizeMB * 8) / durationInSeconds).toFixed(2);
 }
 
-// Rysowanie wizytówki z wynikami
+// Rysowanie karty wyników
 function drawCard(ping, download, upload) {
     const canvas = document.getElementById('resultCanvas');
     const ctx = canvas.getContext('2d');
