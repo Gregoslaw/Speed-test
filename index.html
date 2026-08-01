@@ -24,15 +24,13 @@
     <button id="startBtn" onclick="runTest()">ROZPOCZNIJ TEST</button>
 
     <div id="canvas-container">
-        <!-- Tutaj generuje się wynikowa grafika -->
         <canvas id="resultCanvas" width="500" height="260"></canvas>
-        
         <a id="waBtn" class="wa-btn" target="_blank">Wyślij wynik przez WhatsApp</a>
     </div>
 </div>
 
 <script>
-const PHONE_NUMBER = "TWÓJ_NUMER_TELEFONU"; // Wpisz swój numer z kierunkowym, np. 48123456789
+const PHONE_NUMBER = "48123456789"; // Podmień na swój numer telefonu z kierunkowym kraju
 
 async function runTest() {
     const status = document.getElementById('status');
@@ -58,10 +56,8 @@ async function runTest() {
 
         status.innerText = "Test zakończony sukcesem!";
         
-        // Rysowanie grafiki na wzór Speedtest
         drawCard(downloadMbps, durationInSeconds.toFixed(1));
 
-        // Przygotowanie linku WhatsApp
         const text = encodeURIComponent(`📊 Wynik Speedtest:\n⬇ Pobieranie: ${downloadMbps} Mbps\n⏱ Czas: ${durationInSeconds.toFixed(1)}s`);
         document.getElementById('waBtn').href = `https://wa.me/${PHONE_NUMBER}?text=${text}`;
 
@@ -78,11 +74,9 @@ function drawCard(download, time) {
     const canvas = document.getElementById('resultCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Tło
     ctx.fillStyle = '#0f0f12';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Nagłówek
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 20px Arial';
     ctx.fillText('SPEEDTEST', 25, 40);
@@ -92,7 +86,6 @@ function drawCard(download, time) {
     const now = new Date();
     ctx.fillText(now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), 360, 40);
 
-    // Linia podziału
     ctx.strokeStyle = '#22222a';
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -100,7 +93,6 @@ function drawCard(download, time) {
     ctx.lineTo(475, 55);
     ctx.stroke();
 
-    // Sekcja POBIERANIE
     ctx.fillStyle = '#00f2fe';
     ctx.font = 'bold 14px Arial';
     ctx.fillText('⬇ POBIERANIE Mbps', 25, 95);
@@ -109,7 +101,6 @@ function drawCard(download, time) {
     ctx.font = 'bold 48px Arial';
     ctx.fillText(download, 25, 155);
 
-    // Sekcja CZAS / DETAILS
     ctx.fillStyle = '#aaa';
     ctx.font = '14px Arial';
     ctx.fillText('Czas testu:', 280, 95);
@@ -117,7 +108,6 @@ function drawCard(download, time) {
     ctx.font = 'bold 24px Arial';
     ctx.fillText(time + ' s', 280, 130);
 
-    // Stopka
     ctx.fillStyle = '#444';
     ctx.fillRect(0, 195, canvas.width, 65);
     
