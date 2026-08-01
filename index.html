@@ -25,11 +25,12 @@
 
     <div id="canvas-container">
         <canvas id="resultCanvas" width="500" height="280"></canvas>
-        <button id="shareBtn" class="share-btn" onclick="shareResult()">Udostępnij wynik (WhatsApp / Signal / Messenger)</button>
+        <button id="shareBtn" class="share-btn" onclick="shareResultImage()">Udostępnij wynik (Grafika)</button>
     </div>
 </div>
 
 <script>
+let imageBlob = null;
 let shareDataText = "";
 
 async function runFullTest() {
@@ -55,11 +56,16 @@ async function runFullTest() {
 
         status.innerText = "Test zakończony!";
 
-        // Generowanie karty wynikowej na canvas
+        // Generowanie karty wynikowej
         drawCard(ping, downloadMbps, uploadMbps);
 
-        // Treść raportu do udostępnienia
-        shareDataText = `📊 *WYNIK TESTU PRĘDKOŚCI*\n⏱ *Ping:* ${ping} ms\n⬇ *Pobieranie:* ${downloadMbps} Mbps\n⬆ *Wysyłanie:* ${uploadMbps} Mbps\n📅 *Data:* ${new Date().toLocaleString('pl-PL')}`;
+        // Zamiana canvas na plik graficzny Blob
+        const canvas = document.getElementById('resultCanvas');
+        canvas.toBlob((blob) => {
+            imageBlob = blob;
+        }, 'image/png');
+
+        shareDataText = `📊 Speedtest Result: Download ${downloadMbps} Mbps / Upload ${uploadMbps} Mbps / Ping ${ping} ms`;
 
         container.style.display = 'block';
 
@@ -71,11 +77,16 @@ async function runFullTest() {
     }
 }
 
-// Funkcja obsługująca natywne udostępnianie w telefonie
-async function shareResult() {
-    if (navigator.share) {
+// Udostępnianie PLIKU GRAFICZNEGO do WhatsApp / Signal / Messenger
+async function shareResultImage() {
+    if (!imageBlob) return;
+
+    const file = new File([imageBlob], 'speedtest-result.png', { type: 'image/png' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
             await navigator.share({
+                files: [file],
                 title: 'Wynik Speedtest',
                 text: shareDataText
             });
@@ -83,42 +94,52 @@ async function shareResult() {
             console.log('Anulowano udostępnianie');
         }
     } else {
-        // Skopiowanie do schowka, jeśli przeglądarka nie wspiera Web Share API
-        navigator.clipboard.writeText(shareDataText);
-        alert("Wynik skopiowany do schowka! Możesz go wkleić w dowolnej aplikacji.");
+        alert("Twoja przeglądarka nie obsługuje bezpośredniego udostępniania plików. Przytrzymaj palec na obrazku wyżej i wybierz 'Kopiuj' lub 'Zapisz'.");
     }
 }
 
-// Funkcja mierzenia PING
+// Poprawiony pomiar PING (bez buforowania)
 async function measurePing() {
     const pings = [];
     for (let i = 0; i < 4; i++) {
         const start = performance.now();
-        await fetch('https://gregoslaw.github.io/Speed-test/20MB.bin?ping=' + Math.random(), { method: 'HEAD' });
+        await fetch('https://gregoslaw.github.io/Speed-test/20MB.bin?r=' + Date.now() + Math.random(), {
+            method: 'HEAD',
+            cache: 'no-store'
+        });
         pings.push(performance.now() - start);
     }
     const avgPing = pings.reduce((a, b) => a + b, 0) / pings.length;
     return Math.round(avgPing);
 }
 
-// Funkcja mierzenia POBIERANIA (3 x 20 MB = 60 MB)
+// Poprawiony pomiar POBIERANIA (bez cache + odczyt strumieniowy)
 async function measureDownload() {
     const fileSizeMB = 20;
-    const iterations = 3;
+    const iterations = 2;
     let totalTimeSec = 0;
 
     for (let i = 0; i < iterations; i++) {
         const startTime = performance.now();
-        const response = await fetch('https://gregoslaw.github.io/Speed-test/20MB.bin?cache=' + Math.random());
-        await response.blob();
-        totalTimeSec += (performance.now() - startTime) / 1000;
+        const response = await fetch('https://gregoslaw.github.io/Speed-test/20MB.bin?r=' + Date.now() + Math.random(), {
+            cache: 'no-store'
+        });
+        
+        const reader = response.body.getReader();
+        while (true) {
+            const { done } = await reader.read();
+            if (done) break;
+        }
+        
+        const endTime = performance.now();
+        totalTimeSec += (endTime - startTime) / 1000;
     }
 
     const totalDownloadedMB = fileSizeMB * iterations;
     return ((totalDownloadedMB * 8) / totalTimeSec).toFixed(2);
 }
 
-// Funkcja mierzenia WYSYŁANIA (Upload 6 MB)
+// Pomiar WYSYŁANIA
 async function measureUpload() {
     const uploadSizeMB = 6;
     const bytes = new Uint8Array(uploadSizeMB * 1024 * 1024);
