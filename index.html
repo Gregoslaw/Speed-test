@@ -3,231 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twój Wynik Testu Prędkości - Stalowa Wola</title>
-    <!-- Ikony FontAwesome dla przycisków i komunikatorów -->
+    <title>Twój Wynik Testu Prędkości - Gregosław</title>
+    <!-- Ikony FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
             --bg-color: #0f1c2e;
             --tile-bg: #1e2a3a;
             --text-color: #ffffff;
-            --primary-accent: #3b82f6; /* Niebieski dla przycisków i Download */
+            --primary-accent: #3b82f6; 
             --tile-border: #2d3b4f;
             --whatsapp-green: #25D366;
             --signal-blue: #3267E4;
             --messenger-blue: #0084FF;
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .screen-container { width: 100%; max-width: 480px; height: 90vh; background-color: var(--tile-bg); border-radius: 40px; overflow: hidden; position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; }
+        .screen-content { flex: 1; padding: 30px; box-sizing: border-box; overflow-y: auto; text-align: center; }
 
-        .screen-container {
-            width: 100%;
-            max-width: 480px; /* Szerokość ekranu telefonu */
-            height: 90vh; /* Wysokość ekranu */
-            background-color: var(--tile-bg);
-            border-radius: 40px;
-            overflow: hidden;
-            position: relative;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5);
-            display: flex;
-            flex-direction: column;
-        }
+        h1.title { font-size: 20px; font-weight: 300; margin-bottom: 30px; letter-spacing: 1px; text-transform: uppercase; }
 
-        .screen-content {
-            flex: 1;
-            padding: 30px;
-            box-sizing: border-box;
-            overflow-y: auto;
-            text-align: center;
-        }
-
-        /* Tytuł */
-        h1.title {
-            font-size: 20px;
-            font-weight: 300;
-            margin-bottom: 30px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        /* Sekcja Start */
-        #start-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-        }
-
-        #start-btn {
-            background-color: var(--primary-accent);
-            color: var(--text-color);
-            border: none;
-            border-radius: 12px;
-            padding: 20px 40px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-        }
+        /* SEKCJA STARTU */
+        #start-section { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+        #start-btn { background-color: var(--primary-accent); color: var(--text-color); border: none; border-radius: 12px; padding: 20px 40px; font-size: 18px; font-weight: 600; cursor: pointer; transition: background-color 0.2s, transform 0.1s; }
         #start-btn:hover { background-color: #2563eb; }
-        #start-btn:active { transform: scale(0.98); }
         #start-btn:disabled { background-color: #444; cursor: not-allowed; }
 
-        /* Układ Kafelkowy z wynikami (początkowo ukryty) */
-        #results-section {
-            display: none;
-        }
-
-        .results-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .tile {
-            background-color: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--tile-border);
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            position: relative;
-        }
-
-        .tile.full-width {
-            grid-column: 1 / -1;
-        }
-
-        .tile-label {
-            font-size: 14px;
-            color: #b0c4de;
-            margin-bottom: 8px;
-            font-weight: 300;
-        }
-
-        .tile-value {
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .tile-unit {
-            font-size: 16px;
-            font-weight: 300;
-            margin-left: 5px;
-            color: #ccc;
-        }
+        /* SEKCJA WYNIKÓW (UKRYTA) */
+        #results-section { display: none; }
+        .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; }
+        .tile { background-color: rgba(255, 255, 255, 0.05); border: 1px solid var(--tile-border); border-radius: 12px; padding: 20px; text-align: center; position: relative; }
+        .tile.full-width { grid-column: 1 / -1; }
+        .tile-label { font-size: 14px; color: #b0c4de; margin-bottom: 8px; font-weight: 300; }
+        .tile-value { font-size: 28px; font-weight: bold; }
+        .tile-unit { font-size: 16px; font-weight: 300; margin-left: 5px; color: #ccc; }
         
-        /* Akcenty kolorystyczne dla Download i Upload */
         #download-val { color: var(--primary-accent); }
-        #upload-val { color: #818cf8; } /* Indigo dla Upload */
+        #upload-val { color: #818cf8; } 
 
-        /* Pasek postępu (ukryty) */
-        .progress-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 3px;
-            background-color: var(--primary-accent);
-            width: 0%;
-            transition: width 0.3s;
-            border-radius: 0 0 12px 12px;
-        }
+        .progress-bar { position: absolute; bottom: 0; left: 0; height: 3px; background-color: var(--primary-accent); width: 0%; transition: width 0.3s; border-radius: 0 0 12px 12px; }
 
-        /* Przyciski Akcji */
-        .action-buttons {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .btn-action {
-            flex: 1;
-            background-color: var(--primary-accent);
-            color: var(--text-color);
-            border: none;
-            border-radius: 12px;
-            padding: 18px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
+        .action-buttons { display: flex; gap: 15px; margin-bottom: 25px; }
+        .btn-action { flex: 1; background-color: var(--primary-accent); color: var(--text-color); border: none; border-radius: 12px; padding: 18px; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .btn-action i { font-size: 18px; }
-        .btn-action:hover { background-color: #2563eb; }
 
-        /* Przycisk 'Wyślij' */
-        .btn-send {
-            width: 100%;
-            background-color: #1e3a5f;
-            margin-bottom: 30px;
-        }
-        .btn-send:hover { background-color: #152c4a; }
+        .btn-send { width: 100%; background-color: #1e3a5f; margin-bottom: 30px; }
 
-        /* Ikony Komunikatorów (ukryte do zakończenia testu) */
-        #share-section {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .share-icons {
-            display: flex;
-            justify-content: center;
-            gap: 25px;
-            margin-bottom: 30px;
-        }
-
-        .share-icon-btn {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 35px;
-            color: var(--text-color);
-            transition: transform 0.2s;
-        }
+        /* UDOSTĘPNIANIE (UKRYTE) */
+        #share-section { display: none; flex-direction: column; align-items: center; }
+        .share-icons { display: flex; justify-content: center; gap: 25px; margin-bottom: 30px; }
+        .share-icon-btn { width: 70px; height: 70px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 35px; color: var(--text-color); transition: transform 0.2s; }
         .share-icon-btn:hover { transform: scale(1.1); }
         .btn-whatsapp { background-color: var(--whatsapp-green); }
         .btn-signal { background-color: var(--signal-blue); }
         .btn-messenger { background-color: var(--messenger-blue); }
 
-        /* Dolne przyciski */
-        .footer-buttons {
-            display: flex;
-            gap: 15px;
-            margin-top: auto;
-            padding-bottom: 20px;
-        }
-        .btn-footer {
-            flex: 1;
-            background-color: transparent;
-            border: 1px solid var(--tile-border);
-            color: #b0c4de;
-            border-radius: 8px;
-            padding: 12px;
-            font-size: 14px;
-            cursor: pointer;
-            font-weight: 300;
-        }
+        .footer-buttons { display: flex; gap: 15px; margin-top: auto; padding-bottom: 20px; }
+        .btn-footer { flex: 1; background-color: transparent; border: 1px solid var(--tile-border); color: #b0c4de; border-radius: 8px; padding: 12px; font-size: 14px; cursor: pointer; font-weight: 300; }
         .btn-footer:hover { background-color: rgba(255,255,255,0.05); }
 
     </style>
@@ -244,7 +77,7 @@
             <button id="start-btn" onclick="startTest()"><i class="fa-solid fa-play" style="margin-right: 10px;"></i> ROZPOCZNIJ TEST</button>
         </div>
 
-        <!-- SEKCJA WYNIKÓW (UKRYTA DO STARTU) -->
+        <!-- SEKCJA WYNIKÓW (UKRYTA) -->
         <div id="results-section">
             <div class="results-grid">
                 <div class="tile">
@@ -277,30 +110,28 @@
 
             <div class="action-buttons">
                 <button class="btn-action"><i class="fa-regular fa-file-lines"></i> SZCZEGÓŁY</button>
-                <button class="btn-action" id="restart-btn" onclick="location.reload()"><i class="fa-solid fa-arrows-rotate"></i> NOWY TEST</button>
+                <button class="btn-action" onclick="location.reload()"><i class="fa-solid fa-arrows-rotate"></i> NOWY TEST</button>
             </div>
         </div>
 
-        <!-- SEKCJA UDOSTĘPNIANIA (UKRYTA DO KOŃCA) -->
+        <!-- SEKCJA UDOSTĘPNIANIA (UKRYTA) -->
         <div id="share-section">
-            <button class="btn-action btn-send"><i class="fa-regular fa-paper-plane"></i> OTWÓRZ, ABY WYSŁAĆ</button>
+            <button class="btn-action btn-send" onclick="alert('Funkcja bezpośredniej wysyłki wymaga konfiguracji serwera.')"><i class="fa-regular fa-paper-plane"></i> OTWÓRZ, ABY WYSŁAĆ</button>
             <div class="share-icons">
-                <button class="share-icon-btn btn-whatsapp" onclick="shareWhatsApp()"><i class="fa-brands fa-whatsapp"></i></button>
-                <button class="share-icon-btn btn-signal" onclick="shareSignal()"><i class="fa-brands fa-signal"></i></button>
-                <button class="share-icon-btn btn-messenger" onclick="shareMessenger()"><i class="fa-brands fa-facebook-messenger"></i></button>
+                <button class="share-icon-btn btn-whatsapp"><i class="fa-brands fa-whatsapp"></i></button>
+                <button class="share-icon-btn btn-signal"><i class="fa-brands fa-signal"></i></button>
+                <button class="share-icon-btn btn-messenger"><i class="fa-brands fa-facebook-messenger"></i></button>
             </div>
         </div>
-
     </div>
 
-    <!-- DOLNE PRZYCISKI -->
     <div class="screen-content footer-buttons" style="background-color: transparent; position: relative; padding: 15px 30px;">
         <button class="btn-footer">POMOC</button>
         <button class="btn-footer">CZYM JEST TEST?</button>
     </div>
 </div>
 
-<!-- Silnik LibreSpeed - osadzony skrypt -->
+<!-- Silnik LibreSpeed - NAPRAWIONA INTEGRACJA -->
 <script src="https://cdn.jsdelivr.net/npm/librespeed-tester@2.0.2/dist/librespeed.min.js"></script>
 <script>
     const startSection = document.getElementById('start-section');
@@ -325,23 +156,21 @@
         });
     }
 
-    // Funkcja uruchamiająca test
     function startTest() {
         // 1. Zmiana widoczności sekcji
         startSection.style.display = 'none';
         resultsSection.style.display = 'block';
         startBtn.disabled = true;
-        document.title = "Wynik: Czekam na serwer...";
 
         // 2. Inicjalizacja testera LibreSpeed
         const s = new LibreSpeed();
 
-        // 3. Konfiguracja serwerów testowych
+        // 3. Konfiguracja serwerów testowych (używamy darmowych serwerów zaufanych)
         s.setParameter({
             serverList: [
                 {
-                    name: "Stalowa Wola Voiceworks (Lokalny)",
-                    server: "https://pl-st.librespeed.org/", 
+                    name: "Warszawa Voiceworks",
+                    server: "https://pl-waw1.st.voiceworks.pl/", 
                     dlURL: "garbage.php",
                     ulURL: "empty.php",
                     pingURL: "empty.php",
@@ -358,63 +187,33 @@
             ]
         });
 
-        // 4. Obsługa zdarzeń postępu
+        // 4. Obsługa zdarzeń
         s.onIpReceived = function(ip) {
             // LibreSpeed dostarcza tylko IP, ISP pobieramy oddzielnie
             document.getElementById('ip-val').innerText = ip;
         };
 
         s.onUpdate = function(data) {
-            // Aktualizacja Ping i Jitter
             document.getElementById('ping-val').innerText = data.ping;
             document.getElementById('jitter-val').innerText = data.jitter;
             
-            // Aktualizacja Download (tylko gdy data.dlStatus jest dostępny)
-            if (data.dlStatus !== "---") {
-                const dlVal = parseFloat(data.dlStatus || 0).toFixed(2);
-                document.getElementById('download-val').innerHTML = dlVal + '<span class="tile-unit">Mbps</span>';
-                document.title = "Wynik: " + dlVal + " Mbps Download";
-                
-                // Aktualizacja paska postępu (przyjmujemy max 1000 Mbps do celów wizualnych)
-                dlProgress.style.width = (Math.min(data.dlStatus / 10, 100)) + '%';
-            }
+            const dlVal = parseFloat(data.dlStatus || 0).toFixed(2);
+            document.getElementById('download-val').innerHTML = dlVal + '<span class="tile-unit">Mbps</span>';
+            dlProgress.style.width = (Math.min(data.dlStatus / 10, 100)) + '%';
 
-            // Aktualizacja Upload (tylko gdy data.ulStatus jest dostępny)
-            if (data.ulStatus !== "---") {
-                const ulVal = parseFloat(data.ulStatus || 0).toFixed(2);
-                document.getElementById('upload-val').innerHTML = ulVal + '<span class="tile-unit">Mbps</span>';
-                ulProgress.style.width = (Math.min(data.ulStatus / 10, 100)) + '%';
-            }
+            const ulVal = parseFloat(data.ulStatus || 0).toFixed(2);
+            document.getElementById('upload-val').innerHTML = ulVal + '<span class="tile-unit">Mbps</span>';
+            ulProgress.style.width = (Math.min(data.ulStatus / 10, 100)) + '%';
         };
 
         s.onEnd = function() {
             // Wyświetl sekcję udostępniania i pobierz ISP
             shareSection.style.display = 'flex';
-            document.title = "Test zakończony - Twój Wynik";
-            resultsSection.querySelector('h1.title').innerText = "WYNIK KOŃCOWY";
             fetchIPAndISP();
         };
 
         // 5. Uruchom test
         s.start();
-    }
-
-    // Funkcje udostępniania
-    function shareWhatsApp() {
-        const text = "Sprawdź mój wynik testu prędkości z Stalowej Woli! " + location.href;
-        location.href = "whatsapp://send?text=" + encodeURIComponent(text);
-    }
-
-    function shareSignal() {
-        const text = "Mój wynik testu prędkości z Stalowej Woli: " + location.href;
-        location.href = "sgnl://share?text=" + encodeURIComponent(text);
-    }
-
-    function shareMessenger() {
-        // Messenger wymaga aplikacji i specjalnego linku lub udostępniania przez m.me
-        // To jest najprostsza próba otwarcia messengera do udostępnienia
-        const text = "Mój wynik testu prędkości: " + location.href;
-        location.href = "fb-messenger://share/?link=" + encodeURIComponent(location.href);
     }
 </script>
 
