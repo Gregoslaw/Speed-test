@@ -3,64 +3,255 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Speed Test Polska - Gregosław</title>
+    <title>Twój Wynik Testu Prędkości</title>
+    <!-- Ikony FontAwesome dla przycisków i komunikatorów -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Stylizacja tła i karty, zgodna z Twoim pierwotnym projektem */
+        :root {
+            --bg-color: #0f1c2e;
+            --tile-bg: #1e2a3a;
+            --text-color: #ffffff;
+            --primary-accent: #3b82f6; /* Niebieski dla przycisków */
+            --tile-border: #2d3b4f;
+            --whatsapp-green: #25D366;
+            --signal-blue: #3267E4;
+            --messenger-blue: #0084FF;
+        }
+
         body {
-            font-family: 'Open Sans', 'Helvetica', sans-serif;
-            text-align: center;
-            background: #000000; /* Czarne tło */
-            color: #ffffff;
-            padding: 20px 10px;
-            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh; /* Pełna wysokość ekranu */
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
         }
-        .card {
-            background: #16161a; /* Ciemnoszara karta */
+
+        .screen-container {
             width: 100%;
-            max-width: 800px; /* Szersza karta dla lepszego widoku OpenSpeedTest */
-            height: 600px; /* Stała wysokość karty */
-            padding: 10px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-            overflow: hidden; /* Ukrywa wystające elementy iframe */
+            max-width: 480px; /* Szerokość ekranu telefonu */
+            height: 90vh; /* Wysokość ekranu, z marginesem */
+            background-color: transparent;
+            border-radius: 40px;
+            overflow: hidden;
             position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5); /* Cień 'głębi' */
         }
-        h2 {
-            color: #f0f0f0;
-            margin-top: 10px;
-            font-weight: 300;
-            letter-spacing: 1px;
-            font-size: 20px;
-        }
-        
-        /* Stylizacja iframe OpenSpeedTest */
-        iframe {
+
+        .screen-content {
+            background-color: var(--tile-bg);
             width: 100%;
-            height: calc(100% - 40px); /* Wysokość karty minus nagłówek */
-            border: none;
-            border-radius: 0 0 16px 16px; /* Zaokrąglenie tylko na dole */
+            height: calc(100% - 60px); /* Odliczamy pasek statusu i dół */
             position: absolute;
-            bottom: 0;
+            top: 30px;
             left: 0;
+            padding: 30px;
+            box-sizing: border-box;
+            overflow-y: auto;
         }
+
+        .phone-hand {
+            display: none; /* Ukrywamy dłoń w czystym kodzie strony, to dla makiety */
+        }
+
+        /* Tytuł */
+        h1.title {
+            font-size: 20px;
+            font-weight: 300;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* Układ Kafelkowy */
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .tile {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--tile-border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .tile.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .tile-label {
+            font-size: 14px;
+            color: #b0c4de;
+            margin-bottom: 8px;
+            font-weight: 300;
+        }
+
+        .tile-value {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .tile-unit {
+            font-size: 16px;
+            font-weight: 300;
+            margin-left: 5px;
+        }
+
+        /* Przyciski Akcji */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .btn-action {
+            flex: 1;
+            background-color: var(--primary-accent);
+            color: var(--text-color);
+            border: none;
+            border-radius: 12px;
+            padding: 18px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-action i {
+            font-size: 18px;
+        }
+
+        .btn-action:hover {
+            background-color: #2563eb;
+        }
+
+        /* Przycisk 'Wyślij' */
+        .btn-send {
+            width: 100%;
+            background-color: #1e3a5f;
+            margin-bottom: 30px;
+        }
+
+        .btn-send:hover {
+            background-color: #152c4a;
+        }
+
+        /* Ikony Komunikatorów */
+        .share-icons {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .share-icon-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 35px;
+            color: var(--text-color);
+            transition: transform 0.2s;
+        }
+
+        .share-icon-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .btn-whatsapp { background-color: var(--whatsapp-green); }
+        .btn-signal { background-color: var(--signal-blue); }
+        .btn-messenger { background-color: var(--messenger-blue); }
+
+        /* Dolne przyciski */
+        .footer-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-footer {
+            flex: 1;
+            background-color: transparent;
+            border: 1px solid var(--tile-border);
+            color: #b0c4de;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 300;
+        }
+
+        .btn-footer:hover {
+            background-color: rgba(255,255,255,0.05);
+        }
+
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>SPEED TEST STALOWA WOLA (by OpenSpeedTest)</h2>
-    
-    <!-- 
-      INTEGRACJA OPENSPEEDTEST
-      To jest oficjalny widget OpenSpeedTest hostowany na ich serwerach,
-      ale osadzony bezpośrednio na Twojej stronie. Gwarantuje niezawodność
-      i prawdziwe wyniki, omijając rygorystyczne blokady GitHub Pages.
-    -->
-    <iframe src="https://openspeedtest.com/speedtest" allow="geolocation; microphone; camera; midi; encrypted-media;"></iframe>
+<div class="screen-container">
+    <div class="screen-content">
+        <h1 class="title">WYNIK TESTU</h1>
+
+        <div class="results-grid">
+            <div class="tile">
+                <div class="tile-label">Download</div>
+                <div class="tile-value">145.7<span class="tile-unit">Mbps</span></div>
+            </div>
+            <div class="tile">
+                <div class="tile-label">Upload</div>
+                <div class="tile-value">68.2<span class="tile-unit">Mbps</span></div>
+            </div>
+            <div class="tile">
+                <div class="tile-label">Ping</div>
+                <div class="tile-value">12<span class="tile-unit">ms</span></div>
+            </div>
+            <div class="tile">
+                <div class="tile-label">Jitter</div>
+                <div class="tile-value">1<span class="tile-unit">ms</span></div>
+            </div>
+            <div class="tile full-width">
+                <div class="tile-label">Twoje IP</div>
+                <div class="tile-value">192.168.1.1</div>
+            </div>
+            <div class="tile full-width">
+                <div class="tile-label">Operator</div>
+                <div class="tile-value">ORANGE PL</div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn-action"><i class="fa-regular fa-file-lines"></i> SPRAWDŹ SZCZEGÓŁY</button>
+            <button class="btn-action"><i class="fa-solid fa-share-nodes"></i> UDOSTĘPNIJ</button>
+        </div>
+
+        <button class="btn-action btn-send"><i class="fa-regular fa-paper-plane"></i> OTWÓRZ, ABY WYSŁAĆ</button>
+
+        <div class="share-icons">
+            <button class="share-icon-btn btn-whatsapp" title="Udostępnij przez WhatsApp"><i class="fa-brands fa-whatsapp"></i></button>
+            <button class="share-icon-btn btn-signal" title="Udostępnij przez Signal"><i class="fa-brands fa-signal"></i></button>
+            <button class="share-icon-btn btn-messenger" title="Udostępnij przez Messenger"><i class="fa-brands fa-facebook-messenger"></i></button>
+        </div>
+
+        <div class="footer-buttons">
+            <button class="btn-footer">POMOC</button>
+            <button class="btn-footer">CZYM JEST TEST PRĘDKOŚCI?</button>
+        </div>
+    </div>
 </div>
 
 </body>
